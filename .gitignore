@@ -1,0 +1,17 @@
+# Node
+afterwords-web/node_modules
+afterwords-web/dist
+
+# .NET
+Afterwords.Api/bin
+Afterwords.Api/obj
+
+# VS Code
+.vscode/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
