@@ -41,4 +41,24 @@ public class BooksController : ControllerBase
             return StatusCode(500, new { error = ex.Message });
         }
     }
+
+    [HttpGet("{id:int}")]
+    public async Task<IActionResult> GetBook(int id)
+    {
+        try
+        {
+            var book = await _bookService.GetBookByIdAsync(id);
+
+            if (book == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(book);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = ex.Message });
+        }
+    }
 }
