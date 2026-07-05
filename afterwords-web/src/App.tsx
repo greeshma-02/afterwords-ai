@@ -1,6 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { Routes, Route, useNavigate, useParams, Link } from "react-router-dom";
+import { Routes, Route, useNavigate, useParams, Navigate, useLocation } from "react-router-dom";
 import BookDetail from "./BookDetail";
+import WriteReflection from "./WriteReflection";
+import ReflectionDetail from "./ReflectionDetail";
+import ReflectionsPage from "./ReflectionsPage";
+import SignInPage from "./SignInPage";
+import SignUpPage from "./SignUpPage";
+import AppHeader from "./AppHeader";
+import { fetchReflection } from "./reflectionApi";
+import type { ApiReflection } from "./reflectionApi";
+import { ROUTES } from "./routes";
 
 interface Book {
   id: number;
@@ -98,7 +107,7 @@ const BookDetailPage: React.FC = () => {
         <p className="text-slate-400 mb-4">Book not found.</p>
         <button
           type="button"
-          onClick={() => navigate("/")}
+          onClick={() => navigate(ROUTES.home)}
           className="text-primary hover:underline"
         >
           Back to Shelf
@@ -110,7 +119,131 @@ const BookDetailPage: React.FC = () => {
     <BookDetail
       book={book}
       tags={moodTags(book)}
-      onBack={() => navigate("/")}
+      onBack={() => navigate(ROUTES.home)}
+      onWriteReflection={() => navigate(ROUTES.writeReflection(book.id))}
+    />
+  );
+};
+
+const WriteReflectionPage: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const [book, setBook] = useState<Book | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!id) return;
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    fetch(`http://localhost:5259/api/books/${id}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Not found");
+        return res.json();
+      })
+      .then((data) => {
+        if (!cancelled) setBook(data);
+      })
+      .catch((e) => {
+        if (!cancelled) setError(e.message);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  if (!id) return null;
+  if (loading) {
+    return (
+      <p className="max-w-6xl mx-auto px-4 sm:px-6 py-10 text-slate-400">
+        Loading…
+      </p>
+    );
+  }
+  if (error || !book) {
+    return (
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 text-center">
+        <p className="text-slate-400 mb-4">Book not found.</p>
+        <button
+          type="button"
+          onClick={() => navigate(ROUTES.home)}
+          className="text-primary hover:underline"
+        >
+          Back to Shelf
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <WriteReflection
+      book={book}
+      onBackToShelf={() => navigate(ROUTES.home)}
+      onSaved={(reflectionId) => navigate(ROUTES.reflection(reflectionId))}
+    />
+  );
+};
+
+const ReflectionDetailPage: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const [reflection, setReflection] = useState<ApiReflection | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!id) return;
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    fetchReflection(id)
+      .then((data) => {
+        if (!cancelled) setReflection(data);
+      })
+      .catch((e) => {
+        if (!cancelled) setError(e instanceof Error ? e.message : "Not found");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  if (!id) return null;
+
+  if (loading) {
+    return (
+      <p className="max-w-3xl mx-auto px-4 sm:px-6 py-10 text-slate-400">
+        Loading…
+      </p>
+    );
+  }
+
+  if (error || !reflection) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10 text-center">
+        <p className="text-slate-400 mb-4">Reflection not found.</p>
+        <button
+          type="button"
+          onClick={() => navigate(ROUTES.home)}
+          className="text-primary hover:underline"
+        >
+          Back to Shelf
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <ReflectionDetail
+      reflection={reflection}
+      onBack={() => navigate(-1)}
     />
   );
 };
@@ -122,6 +255,9 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
+  const isAuthPage =
+    location.pathname === ROUTES.signIn || location.pathname === ROUTES.signUp;
 
   const loadAllBooks = async () => {
     setLoading(true);
@@ -199,47 +335,13 @@ const App: React.FC = () => {
 
   return (
     <div className="bg-background-light dark:bg-background-dark font-display min-h-screen text-cream">
-      <div className="paper-grain" />
+      {!isAuthPage && <div className="paper-grain" />}
 
-      {/* Navigation */}
-      <header className="border-b border-primary/10 px-4 py-4 sm:px-6 lg:px-12 backdrop-blur-md sticky top-0 z-40 bg-background-dark/80">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          {/* Afterwords logo and text */}
-          <Link className="flex items-center gap-3" to="/">
-            <div className="h-10 w-10 flex items-center justify-center">
-              <span className="material-symbols-outlined text-primary text-3xl">
-                auto_stories
-              </span>
-            </div>
-            <span className="font-display italic tracking-tight font-bold text-3xl text-[rgb(212_175_55_/var(--tw-text-opacity,_1))]">
-              Afterwords
-            </span>
-          </Link>
-          <nav className="flex items-center gap-8">
-            <Link
-              className="text-xs font-medium text-primary hover:text-white transition-colors uppercase tracking-widest"
-              to="/"
-            >
-              Shelf
-            </Link>
-            <a
-              className="text-xs font-medium text-primary hover:text-white transition-colors uppercase tracking-widest"
-              href="#"
-            >
-              Reflections
-            </a>
-            <a
-              className="text-xs font-medium text-primary hover:text-white transition-colors uppercase tracking-widest"
-              href="#"
-            >
-              Profile
-            </a>
-          </nav>
-        </div>
-      </header>
+      <AppHeader minimal={isAuthPage} />
 
       <Routes>
-        <Route path="/" element={<>
+        <Route path="/" element={<Navigate to={ROUTES.home} replace />} />
+        <Route path={ROUTES.home} element={<>
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
         {/* Hero & Search */}
         <section className="text-center mb-10">
@@ -336,11 +438,11 @@ const App: React.FC = () => {
                   key={book.id}
                   role="button"
                   tabIndex={0}
-                  onClick={() => navigate(`/book/${book.id}`)}
+                  onClick={() => navigate(ROUTES.book(book.id))}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") {
                       e.preventDefault();
-                      navigate(`/book/${book.id}`);
+                      navigate(ROUTES.book(book.id));
                     }
                   }}
                   className="glass-card rounded-2xl p-5 group transition-all hover:bg-primary/[0.05] shadow-xl relative cursor-pointer"
@@ -366,6 +468,7 @@ const App: React.FC = () => {
                       <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                         <button
                           type="button"
+                          onClick={() => navigate(ROUTES.writeReflection(book.id))}
                           className="flex items-center justify-center size-7 rounded-full border border-primary/20 text-primary/80 hover:text-primary hover:border-primary/40 bg-primary/5 hover:bg-primary/10 transition-colors"
                           aria-label="Write a reflection for this book"
                         >
@@ -457,7 +560,12 @@ const App: React.FC = () => {
         </p>
       </footer>
       </>} />
-        <Route path="/book/:id" element={<BookDetailPage />} />
+        <Route path={ROUTES.reflections} element={<ReflectionsPage />} />
+        <Route path={ROUTES.signIn} element={<SignInPage />} />
+        <Route path={ROUTES.signUp} element={<SignUpPage />} />
+        <Route path="/afterwords/book/:id" element={<BookDetailPage />} />
+        <Route path="/afterwords/book/:id/write-reflection" element={<WriteReflectionPage />} />
+        <Route path="/afterwords/reflection/:id" element={<ReflectionDetailPage />} />
       </Routes>
     </div>
   );

@@ -27,6 +27,7 @@ interface BookDetailProps {
   };
   tags: string[];
   onBack: () => void;
+  onWriteReflection: () => void;
   synopsis?: string;
 }
 
@@ -34,6 +35,7 @@ const BookDetail: React.FC<BookDetailProps> = ({
   book,
   tags,
   onBack,
+  onWriteReflection,
   synopsis = DEFAULT_SYNOPSIS,
 }) => {
   const displaySynopsis = book.description?.trim() || synopsis;
@@ -81,9 +83,28 @@ const BookDetail: React.FC<BookDetailProps> = ({
 
           {/* Right: Book info */}
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-slate-100 tracking-tight mb-2">
-              {book.title}
-            </h1>
+            <div className="flex items-start justify-between gap-4 mb-2">
+              <h1 className="text-3xl md:text-4xl font-bold text-slate-100 tracking-tight">
+                {book.title}
+              </h1>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={onWriteReflection}
+                  className="flex items-center justify-center size-9 rounded-full border border-primary/20 text-primary/80 hover:text-primary hover:border-primary/40 bg-primary/5 hover:bg-primary/10 transition-colors"
+                  aria-label="Write a reflection for this book"
+                >
+                  <span className="material-symbols-outlined text-lg">ink_pen</span>
+                </button>
+                <button
+                  type="button"
+                  className="flex items-center justify-center size-9 rounded-full border border-primary/20 text-primary/80 hover:text-primary hover:border-primary/40 bg-primary/5 hover:bg-primary/10 transition-colors"
+                  aria-label="Save to Afterwords"
+                >
+                  <span className="material-symbols-outlined text-lg">bookmark_add</span>
+                </button>
+              </div>
+            </div>
             <p className="text-slate-300 text-lg mb-6">by {book.author}</p>
 
             {tags.length > 0 && (
@@ -111,7 +132,7 @@ const BookDetail: React.FC<BookDetailProps> = ({
             </section>
 
             <div className="flex flex-wrap gap-4">
-              <Button variant="primary" icon="edit_note">
+              <Button variant="primary" icon="edit_note" onClick={onWriteReflection}>
                 Write a Reflection
               </Button>
               <Button variant="secondary" icon="library_add">
@@ -121,7 +142,7 @@ const BookDetail: React.FC<BookDetailProps> = ({
           </div>
         </div>
 
-        <ReaderReflections />
+        <ReaderReflections bookId={book.id} />
         <QuoteSection />
       </main>
     </div>
