@@ -1,5 +1,8 @@
 import React, { useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import Button from "./Button";
+import { getStoredAuth } from "./authApi";
+import { useAuthPrompt } from "./authPrompt";
 import { createReflection } from "./reflectionApi";
 
 const FALLBACK_COVER_URL =
@@ -26,6 +29,8 @@ const WriteReflection: React.FC<WriteReflectionProps> = ({
   onSaved,
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const location = useLocation();
+  const { promptLogin } = useAuthPrompt();
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [selectedMoods, setSelectedMoods] = useState<string[]>(["Hopeful", "Reflective"]);
@@ -54,6 +59,16 @@ const WriteReflection: React.FC<WriteReflectionProps> = ({
       return;
     }
 
+    const auth = getStoredAuth();
+    if (!auth?.token) {
+      promptLogin({
+        returnTo: location.pathname,
+        title: "Sign in to save your reflection",
+        message: "Sign in to save this reflection to your account.",
+      });
+      return;
+    }
+
     setSaving(true);
     setError(null);
 
@@ -65,7 +80,7 @@ const WriteReflection: React.FC<WriteReflectionProps> = ({
         moods: selectedMoods,
         containsSpoilers,
         visibility,
-        authorName: "Greeshma",
+        authorName: auth.fullName || auth.email,
       });
       onSaved(saved.id);
     } catch (e) {

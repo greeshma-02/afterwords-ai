@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Afterwords.Api.Models;
 using Afterwords.Api.Services;
@@ -15,11 +17,17 @@ public class ReflectionsController : ControllerBase
         _reflectionService = reflectionService;
     }
 
+    [Authorize]
     [HttpPost]
     public async Task<IActionResult> CreateReflection([FromBody] CreateReflectionRequest request)
     {
         try
         {
+            if (!TryGetUserId(out var userId))
+            {
+                return Unauthorized(new { error = "Please sign in to save a reflection." });
+            }
+
             if (request.BookId <= 0)
             {
                 return BadRequest(new { error = "A valid book is required." });
@@ -35,6 +43,7 @@ public class ReflectionsController : ControllerBase
                 return BadRequest(new { error = "Visibility must be public or private." });
             }
 
+            request.UserId = userId;
             var reflection = await _reflectionService.CreateReflectionAsync(request);
             if (reflection is null)
             {
@@ -49,18 +58,64 @@ public class ReflectionsController : ControllerBase
         }
     }
 
+    [Authorize]
+    [HttpGet("mine")]
+    public async Task<IActionResult> GetMyReflections()
+    {
+        try
+        {
+            if (!TryGetUserId(out var userId))
+            {
+                return Unauthorized(new { error = "Please sign in to view your reflections." });
+            }
+
+            var reflections = await _reflectionService.GetReflectionsForUserAsync(userId);
+            return Ok(reflections);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = ex.Message });
+        }
+    }
+
     [HttpGet("{id:int}")]
     public async Task<IActionResult> GetReflection(int id)
     {
         try
         {
-            var reflection = await _reflectionService.GetReflectionByIdAsync(id);
+            int? viewerUserId = TryGetUserId(out var userId) ? userId : null;
+            var reflection = await _reflectionService.GetReflectionByIdForViewerAsync(id, viewerUserId);
             if (reflection is null)
             {
                 return NotFound();
             }
 
             return Ok(reflection);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = ex.Message });
+        }
+    }
+
+    [Authorize]
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> DeleteReflection(int id)
+    {
+        try
+        {
+            if (!TryGetUserId(out var userId))
+            {
+                return Unauthorized(new { error = "Please sign in to delete a reflection." });
+            }
+
+            var deleted = await _reflectionService.DeleteReflectionAsync(id, userId);
+            if (!deleted)
+            {
+                return NotFound(new { error = "Reflection not found." });
+            }
+
+            return NoContent();
         }
         catch (Exception ex)
         {
@@ -80,5 +135,14 @@ public class ReflectionsController : ControllerBase
         {
             return StatusCode(500, new { error = ex.Message });
         }
+    }
+
+    private bool TryGetUserId(out int userId)
+    {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? User.FindFirstValue(ClaimTypes.Name)
+            ?? User.FindFirstValue("sub");
+
+        return int.TryParse(userIdClaim, out userId);
     }
 }

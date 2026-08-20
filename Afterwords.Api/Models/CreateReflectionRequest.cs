@@ -9,4 +9,5 @@ public class CreateReflectionRequest
     public bool ContainsSpoilers { get; set; }
     public string Visibility { get; set; } = "public";
     public string? AuthorName { get; set; }
+    public int? UserId { get; set; }
 }

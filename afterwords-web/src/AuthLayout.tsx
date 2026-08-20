@@ -32,7 +32,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
                 &ldquo;The world is quiet here, between the ink and the mind.&rdquo;
               </p>
               <p className="text-xs uppercase tracking-widest text-primary font-sans font-bold">
-                EST. 2023
+                EST. 2026
               </p>
             </div>
           </div>

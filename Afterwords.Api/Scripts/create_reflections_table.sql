@@ -2,6 +2,7 @@
 CREATE TABLE IF NOT EXISTS reflections (
     id SERIAL PRIMARY KEY,
     book_id INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+    user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
     title TEXT NOT NULL DEFAULT '',
     body TEXT NOT NULL,
     moods TEXT NOT NULL DEFAULT '',
@@ -14,4 +15,5 @@ CREATE TABLE IF NOT EXISTS reflections (
 );
 
 CREATE INDEX IF NOT EXISTS idx_reflections_book_id ON reflections(book_id);
+CREATE INDEX IF NOT EXISTS idx_reflections_user_id ON reflections(user_id);
 CREATE INDEX IF NOT EXISTS idx_reflections_visibility ON reflections(visibility);

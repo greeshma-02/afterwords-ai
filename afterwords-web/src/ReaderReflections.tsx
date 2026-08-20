@@ -41,13 +41,6 @@ const ReaderReflections: React.FC<ReaderReflectionsProps> = ({ bookId }) => {
         <h3 className="text-2xl font-bold text-slate-100 font-display italic">
           Reader Reflections
         </h3>
-        <a
-          href="#"
-          className="text-primary text-sm hover:underline inline-flex items-center gap-1"
-        >
-          View All
-          <span className="material-symbols-outlined text-lg">arrow_forward</span>
-        </a>
       </div>
 
       {loading && <p className="text-sm text-slate-400 mb-4">Loading reflections…</p>}
@@ -77,20 +70,10 @@ const ReaderReflections: React.FC<ReaderReflectionsProps> = ({ bookId }) => {
             </div>
             <Link
               to={ROUTES.reflection(reflection.id)}
-              className="text-slate-200 italic text-sm leading-relaxed flex-1 mb-5 hover:text-primary transition-colors"
+              className="text-slate-200 italic text-sm leading-relaxed flex-1 hover:text-primary transition-colors"
             >
               &ldquo;{reflectionQuote(reflection.body)}&rdquo;
             </Link>
-            <div className="flex items-center gap-5 text-slate-400 text-sm">
-              <span className="inline-flex items-center gap-1">
-                <span className="material-symbols-outlined text-base">favorite</span>
-                {reflection.likesCount}
-              </span>
-              <span className="inline-flex items-center gap-1">
-                <span className="material-symbols-outlined text-base">chat_bubble</span>
-                {reflection.commentsCount}
-              </span>
-            </div>
           </article>
         ))}
       </div>

@@ -1,13 +1,9 @@
 import React, { useState } from "react";
-
-export const GoogleIcon: React.FC = () => (
-  <svg className="w-5 h-5 group-hover:scale-110 transition-transform" viewBox="0 0 24 24" aria-hidden>
-    <path
-      d="M12.48 10.92v3.28h7.84c-.24 1.84-.91 3.22-1.91 4.21-1.27 1.27-3.23 2.59-7.25 2.59-6.41 0-11.66-5.18-11.66-11.59s5.25-11.59 11.66-11.59c3.48 0 6.12 1.36 8.1 3.29l2.31-2.31c-2.12-2.02-5.06-3.58-10.41-3.58-9.44 0-17.18 7.61-17.18 17s7.74 17 17.18 17c5.1 0 8.94-1.68 12.01-4.84 3.14-3.14 4.14-7.6 4.14-11.39 0-.81-.06-1.57-.18-2.31h-15.97z"
-      fill="#EA4335"
-    />
-  </svg>
-);
+import { Link } from "react-router-dom";
+import { useGoogleLogin } from "@react-oauth/google";
+import { FcGoogle } from "react-icons/fc";
+import { googleSignIn } from "./authApi";
+import { ROUTES } from "./routes";
 
 interface AuthDividerProps {
   label?: string;
@@ -23,15 +19,46 @@ export const AuthDivider: React.FC<AuthDividerProps> = ({ label = "OR" }) => (
   </div>
 );
 
-export const GoogleSignInButton: React.FC = () => (
-  <button
-    type="button"
-    className="w-full flex items-center justify-center gap-3 px-6 py-4 rounded-lg bg-surface-container-high border border-white/10 hover:bg-surface-container-highest transition-all duration-300 group mb-8"
-  >
-    <GoogleIcon />
-    <span className="text-sm text-on-surface font-sans font-medium">Continue with Google</span>
-  </button>
-);
+interface GoogleSignInButtonProps {
+  onSuccess: () => void;
+  onError: (message: string) => void;
+}
+
+export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
+  onSuccess,
+  onError,
+}) => {
+  const [loading, setLoading] = useState(false);
+
+  const login = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setLoading(true);
+      try {
+        await googleSignIn({ accessToken: tokenResponse.access_token });
+        onSuccess();
+      } catch (e) {
+        onError(e instanceof Error ? e.message : "Google sign-in failed.");
+      } finally {
+        setLoading(false);
+      }
+    },
+    onError: () => onError("Google sign-in failed."),
+  });
+
+  return (
+    <div className="mb-8 w-full">
+      <button
+        type="button"
+        onClick={() => login()}
+        disabled={loading}
+        className="w-full flex items-center justify-center gap-3 bg-surface-dark hover:bg-surface-container-highest border border-white/5 py-3.5 rounded-lg transition-all duration-300 disabled:opacity-60 font-sans text-on-surface"
+      >
+        <FcGoogle size={22} />
+        <span>{loading ? "Signing in…" : "Continue with Google"}</span>
+      </button>
+    </div>
+  );
+};
 
 interface AuthFieldProps {
   id: string;
@@ -106,11 +133,17 @@ export const AuthField: React.FC<AuthFieldProps> = ({
 
 export const AuthLegalLinks: React.FC = () => (
   <div className="mt-12 pt-8 border-t border-white/5 flex flex-wrap gap-4 justify-center md:justify-start">
-    <span className="text-xs uppercase tracking-[0.2em] font-bold text-on-surface-variant opacity-40 font-sans cursor-default">
+    <Link
+      to={ROUTES.privacy}
+      className="text-xs uppercase tracking-[0.2em] font-bold text-on-surface-variant opacity-60 hover:opacity-100 hover:text-primary transition-colors font-sans"
+    >
       Privacy Policy
-    </span>
-    <span className="text-xs uppercase tracking-[0.2em] font-bold text-on-surface-variant opacity-40 font-sans cursor-default">
+    </Link>
+    <Link
+      to={ROUTES.terms}
+      className="text-xs uppercase tracking-[0.2em] font-bold text-on-surface-variant opacity-60 hover:opacity-100 hover:text-primary transition-colors font-sans"
+    >
       Terms of Service
-    </span>
+    </Link>
   </div>
 );

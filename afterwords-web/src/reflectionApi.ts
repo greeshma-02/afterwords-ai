@@ -1,4 +1,6 @@
-const API_BASE = "http://localhost:5259/api";
+import { getStoredAuth } from "./authApi";
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:5259/api";
 
 export interface ApiReflection {
   id: number;
@@ -24,6 +26,36 @@ export interface CreateReflectionPayload {
   containsSpoilers: boolean;
   visibility: "public" | "private";
   authorName?: string;
+}
+
+function normalizeReflection(data: Record<string, unknown>): ApiReflection {
+  return {
+    id: Number(data.id),
+    bookId: Number(data.bookId),
+    bookTitle: String(data.bookTitle ?? ""),
+    bookAuthor: String(data.bookAuthor ?? ""),
+    title: String(data.title ?? ""),
+    body: String(data.body ?? ""),
+    moods: String(data.moods ?? ""),
+    containsSpoilers: Boolean(data.containsSpoilers),
+    visibility: String(data.visibility ?? "private"),
+    authorName: String(data.authorName ?? "Anonymous"),
+    likesCount: Number(data.likesCount ?? 0),
+    commentsCount: Number(data.commentsCount ?? 0),
+    createdAt: String(data.createdAt ?? ""),
+  };
+}
+
+function authHeaders(): HeadersInit {
+  const auth = getStoredAuth();
+  if (!auth?.token) {
+    throw new Error("Please sign in to continue.");
+  }
+
+  return {
+    Authorization: `Bearer ${auth.token}`,
+    "Content-Type": "application/json",
+  };
 }
 
 export function reflectionQuote(body: string, maxLength = 160): string {
@@ -53,31 +85,74 @@ export async function createReflection(
 ): Promise<ApiReflection> {
   const res = await fetch(`${API_BASE}/reflections`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: authHeaders(),
     body: JSON.stringify(payload),
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.error ?? `Save failed (${res.status})`);
+  }
+
+  return normalizeReflection(data as Record<string, unknown>);
+}
+
+export async function fetchReflection(id: string): Promise<ApiReflection> {
+  const auth = getStoredAuth();
+  const headers: HeadersInit = auth?.token
+    ? { Authorization: `Bearer ${auth.token}` }
+    : {};
+
+  const res = await fetch(`${API_BASE}/reflections/${id}`, { headers });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.error ?? "Reflection not found.");
+  }
+  return normalizeReflection(data as Record<string, unknown>);
+}
+
+export async function deleteReflection(id: number): Promise<void> {
+  const res = await fetch(`${API_BASE}/reflections/${id}`, {
+    method: "DELETE",
+    headers: authHeaders(),
   });
 
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
-    throw new Error(data.error ?? `Save failed (${res.status})`);
+    throw new Error(data.error ?? `Delete failed (${res.status})`);
   }
-
-  return res.json();
 }
 
-export async function fetchReflection(id: string): Promise<ApiReflection> {
-  const res = await fetch(`${API_BASE}/reflections/${id}`);
-  if (!res.ok) {
-    throw new Error("Reflection not found.");
+export async function fetchMyReflections(): Promise<ApiReflection[]> {
+  const auth = getStoredAuth();
+  if (!auth?.token) {
+    throw new Error("Please sign in to view your reflections.");
   }
-  return res.json();
+
+  const res = await fetch(`${API_BASE}/reflections/mine`, {
+    headers: {
+      Authorization: `Bearer ${auth.token}`,
+    },
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.error ?? `Could not load reflections (${res.status})`);
+  }
+
+  return Array.isArray(data)
+    ? data.map((item) => normalizeReflection(item as Record<string, unknown>))
+    : [];
 }
 
 export async function fetchReflectionsByBook(bookId: number): Promise<ApiReflection[]> {
   const res = await fetch(`${API_BASE}/reflections/book/${bookId}`);
+  const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error(`Could not load reflections (${res.status})`);
+    throw new Error(data.error ?? `Could not load reflections (${res.status})`);
   }
-  const data = await res.json();
-  return Array.isArray(data) ? data : [];
+
+  return Array.isArray(data)
+    ? data.map((item) => normalizeReflection(item as Record<string, unknown>))
+    : [];
 }
