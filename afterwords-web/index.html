@@ -1,12 +1,157 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>afterwords-web</title>
+    <title>Afterwords — A Quiet Sanctuary</title>
+
+    <!-- Google Fonts for display and sans text -->
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,700;1,400&family=Noto+Sans:wght@400;500;600&display=swap"
+    />
+
+    <!-- Material Symbols for icons -->
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700&display=swap"
+    />
+
+    <!-- Tailwind via CDN for this prototype -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              primary: "#D4AF37",
+              "primary-fixed-dim": "#B8962E",
+              cream: "#E8E4D9",
+              "background-light": "#1A1A1A",
+              "background-dark": "#0f110c",
+              "surface-dark": "#1c1e18",
+              "surface-container": "#241f15",
+              "surface-container-high": "#2f291f",
+              "surface-container-highest": "#3a3429",
+              "on-surface": "#ece1d1",
+              "on-surface-variant": "#d3c5ac",
+              "on-primary": "#3f2e00",
+              "accent-brass": "#c9bb92",
+              "secondary-container": "#504626",
+            },
+            fontFamily: {
+              display: ["Noto Serif", "serif"],
+              sans: ["Noto Sans", "sans-serif"],
+            },
+            borderRadius: {
+              DEFAULT: "0.25rem",
+              lg: "0.5rem",
+              xl: "0.75rem",
+              "2xl": "1.25rem",
+              full: "9999px",
+            },
+          },
+        },
+      };
+    </script>
+
+    <style>
+      body {
+        min-height: max(884px, 100dvh);
+        background-color: #0f110c;
+      }
+      .paper-grain {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 50;
+        opacity: 0.02;
+        background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBzaV9eZgp1SWng3XkcNvcbWgIH_KUSfX9p5fDeXqVosJgQ21TW-xPCAuAImrW3xxFkvEblGm_vxil4oC1carNUP7E31KXXdermIGs5AMnq5iC6SKour8CFG1EHmMczl-LaDvKPSQtcfYJkMq7V2o05t4bEB2wBoWE9SzoB0ust4Ux7cqFhB3ta7oePAnaGUIPagVUDdcCkbipCmt-3ZuC9SNsEmOCNaG0TL7f6PPB4vAOs-MRJQ312Vb8GujkR1WGkiy0DakvlVqZ8");
+      }
+      .glass-card {
+        background: rgba(167, 136, 75, 0.03);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(167, 136, 75, 0.1);
+      }
+      .lined-paper {
+        --line-height: 2.75rem;
+        font-size: 1.125rem;
+        line-height: var(--line-height) !important;
+        font-family: "Noto Serif", serif;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        padding: 0;
+        margin: 0;
+        background-image: repeating-linear-gradient(
+          to bottom,
+          transparent,
+          transparent calc(var(--line-height) - 1px),
+          rgba(212, 175, 55, 0.14) calc(var(--line-height) - 1px),
+          rgba(212, 175, 55, 0.14) var(--line-height)
+        );
+        background-attachment: local;
+        background-size: 100% var(--line-height);
+        background-position: 0 0;
+      }
+      .journal-fold {
+        box-shadow: -15px 0 30px -10px rgba(0, 0, 0, 0.5) inset;
+      }
+      .auth-paper-texture::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0.03;
+        pointer-events: none;
+        background-image: url("https://www.transparenttextures.com/patterns/stardust.png");
+        z-index: 1;
+      }
+      .auth-drift {
+        animation: authDrift 15s ease-in-out infinite;
+      }
+      @keyframes authDrift {
+        0% {
+          transform: translateY(0) translateX(0);
+        }
+        50% {
+          transform: translateY(-10px) translateX(5px);
+        }
+        100% {
+          transform: translateY(0) translateX(0);
+        }
+      }
+      .auth-fade-in {
+        animation: authFadeIn 1.2s ease-out forwards;
+      }
+      @keyframes authFadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .shelf-scrollbar::-webkit-scrollbar {
+        height: 6px;
+      }
+      .shelf-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(212, 175, 55, 0.25);
+        border-radius: 9999px;
+      }
+    </style>
   </head>
-  <body>
+  <body class="bg-background-light dark:bg-background-dark font-sans text-slate-900 dark:text-slate-100">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
